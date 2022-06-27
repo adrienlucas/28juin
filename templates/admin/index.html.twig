@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello AdminController!{% endblock %}
+
+{% block body %}
+    {{ form_start(form) }}
+        {{ form_row(form.type) }}
+
+        <div id="champs-holder" data-form-prototype="{{ form_widget(form.champs.vars.prototype)|e }}" data-form-count="{{ form.champs|length }}">
+            {% for champs in form.champs %}
+                {{ form_row(champs) }}
+{#                {{ form_row(champs.nom) }}#}
+{#                {{ form_row(champs.type) }}#}
+{#                {{ form_row(champs.options) }}#}
+            {% endfor %}
+        </div>
+        <a id="champs-adder" href="#">Ajouter champs</a>
+
+        <button type="submit">Enregistrer</button>
+    {{ form_end(form) }}
+
+    <script>
+
+        (() => {
+            $('#champs-adder').click(function(){
+                var champsCount = $('#champs-holder').attr('data-form-count');
+                var newChamps = $('#champs-holder').attr('data-form-prototype');
+                console.log(newChamps);
+                newChamps = newChamps.replaceAll('__name__', champsCount++);
+                console.log(newChamps);
+
+                $('#champs-holder').attr('data-form-count', champsCount);
+
+                $('#champs-holder').append(newChamps);
+            });
+        })();
+
+    </script>
+{% endblock %}

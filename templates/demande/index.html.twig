@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello DemandeController!{% endblock %}
+
+{% block body %}
+    {{ form_start(form) }}
+        {{ form_row(form.type) }}
+
+        {{ form_rest(form) }}
+        <button type="submit">Enregistrer</button>
+    {{ form_end(form) }}
+
+    <script>
+        (() => {
+            $('#{{ form.type.vars.id }}').change(function(){
+                $('form[name="{{ form.vars.name }}"]').submit();
+            });
+        })();
+    </script>
+{% endblock %}
