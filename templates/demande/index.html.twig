@@ -15,6 +15,15 @@
             $('#{{ form.type.vars.id }}').change(function(){
                 $('form[name="{{ form.vars.name }}"]').submit();
             });
+
+            $('form[name="{{ form.vars.name }}"]').submit(function(){
+                var details = {};
+                $('.demande-detail-input').each(function(i, el) {
+                    details[$(el).attr('data-detail-name')] = $(el).val();
+                });
+
+                $('#{{ form.details.vars.id }}').val(JSON.stringify(details));
+            });
         })();
     </script>
 {% endblock %}

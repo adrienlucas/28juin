@@ -10,6 +10,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Event\SubmitEvent;
 use Symfony\Component\Form\Exception\TransformationFailedException;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -25,42 +26,85 @@ class DynamiqueDemandeType extends AbstractType
             'choice_label' => 'type',
             'placeholder' => 'Choisir le type de demande'
         ]);
+        $builder->add('details', HiddenType::class);
 
         //
 //        $dynamiqueFormModifier = function(FormEvent $event) {
-        $dynamiqueFormModifier = function(FormInterface $form, ?Demande $demande) {
+//        $dynamiqueFormModifier = function(FormInterface $form, ?Demande $demande) {
+//
+////            $form = $event->getForm();
+////            dump($event->getData());
+////            dump($event->getForm()->get('type')->getData());
+//
+////            /** @var StructureDemande $structure */
+////            $structure = $form->get('type')->getNormData();
+//
+//            if($demande === null || $demande->getType() === null) {
+//                return;
+//            }
+//
+//            $structureDemande = $demande->getType();
+//
+//            foreach($structureDemande->getChamps() as $champ) {
+//                $formType = $champ->getSymfonyFormType();
+//                $form->add(
+//                    $champ->getNom(),
+//                    $formType,
+//                    ['mapped' => false]
+//                );
+//            }
+//        };
 
-//            $form = $event->getForm();
-//            dump($event->getData());
-//            dump($event->getForm()->get('type')->getData());
 
-//            /** @var StructureDemande $structure */
-//            $structure = $form->get('type')->getNormData();
-
-            if($demande === null || $demande->getType() === null) {
-                return;
-            }
-
-            $structureDemande = $demande->getType();
-
-            foreach($structureDemande->getChamps() as $champ) {
-                $formType = $champ->getSymfonyFormType();
-                $form->add(
-                    $champ->getNom(),
-                    $formType,
-                    ['mapped' => false]
-                );
-            }
-        };
-
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function(FormEvent $event) {
+            dump($event->getData());
+            dump($event->getForm()->get('type')->getData());
+            dump($event->getForm()->get('type')->getNormData());
+            dump($event->getForm()->get('type')->getViewData());
+        });
+        $builder->addEventListener(FormEvents::POST_SET_DATA, function(FormEvent $event) {
+            dump($event->getData());
+            dump($event->getForm()->get('type')->getData());
+            dump($event->getForm()->get('type')->getNormData());
+            dump($event->getForm()->get('type')->getViewData());
+        });
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function(FormEvent $event) {
             dump($event->getData());
-            dump($event->getForm()->getViewData());
+            dump($event->getForm()->get('type')->getData());
+            dump($event->getForm()->get('type')->getNormData());
+            dump($event->getForm()->get('type')->getViewData());
         });
 
-        $builder->addEventListener(FormEvents::SUBMIT, function(FormEvent $event)use ($dynamiqueFormModifier) {
-            $dynamiqueFormModifier($event->getForm(), $event->getData());
+        $builder->addEventListener(FormEvents::SUBMIT, function(FormEvent $event) {
+            $form = $event->getForm();
+            /** @var Demande $demande */
+            $demande = $event->getData();
+            $structureDemande = $demande->getType();
+            dump($demande);
+            $details = json_decode($demande->getDetails(), true);
+            foreach($structureDemande->getChamps() as $champ) {
+                $fieldName = $champ->getNom();
+                $formType = $champ->getSymfonyFormType();
+                $event->getForm()->add(
+                    $fieldName,
+                    $formType,
+                    ['mapped' => false, 'attr' => [
+                        'class' => 'demande-detail-input',
+                        'data-detail-name' => $fieldName
+                    ]]
+                );
+                $form->get($fieldName)
+                    ->setData($details[$fieldName] ?? '');
+            }
         });
+
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function(FormEvent $event) {
+            dump($event->getData());
+        });
+
+//        $builder->addEventListener(FormEvents::SUBMIT, function(FormEvent $event)use ($dynamiqueFormModifier) {
+//            $dynamiqueFormModifier($event->getForm(), $event->getData());
+//        });
 
 //        $builder->addEventListener(
 //            FormEvents::PRE_SET_DATA,

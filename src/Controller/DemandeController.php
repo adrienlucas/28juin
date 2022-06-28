@@ -20,19 +20,25 @@ use Symfony\Component\Routing\Annotation\Route;
 class DemandeController extends AbstractController
 {
     /**
-     * @Route("/demande", name="app_demande")
+     * @Route("/demande/{id}", name="app_demande", defaults={"id": null})
      */
-    public function index(Request $request, EntityManagerInterface $entityManager): Response
+    public function index(?StructureDemande $structureDemande = null, Request $request, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(DynamiqueDemandeType::class);
+        $demande = new Demande();
+
+        $builder->add('type', EntityType::class, [
+            'class' => StructureDemande::class,
+            'choice_label' => 'type',
+            'placeholder' => 'Choisir le type de demande'
+        ]);
+
+
+        $form = $this->createForm(DynamiqueDemandeType::class, $demande);
         $form->handleRequest($request);
 
-        if($form->isSubmitted()) {
-            dump($form->getExtraData());
+        if($form->isSubmitted() && $form->isValid()) {
             /** @var Demande $demande */
             $demande = $form->getData();
-            $demande->setDetails($form->getExtraData());
-
             $entityManager->persist($demande);
             $entityManager->flush();
         }

@@ -24,9 +24,9 @@ class Demande
     private $type;
 
     /**
-     * @ORM\Column(type="json")
+     * @ORM\Column(type="text")
      */
-    private $details = [];
+    private $details;
 
     public function getId(): ?int
     {
@@ -45,12 +45,12 @@ class Demande
         return $this;
     }
 
-    public function getDetails(): ?array
+    public function getDetails(): ?string
     {
         return $this->details;
     }
 
-    public function setDetails(array $details): self
+    public function setDetails($details): self
     {
         $this->details = $details;
 
