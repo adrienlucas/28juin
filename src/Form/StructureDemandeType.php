@@ -24,15 +24,6 @@ class StructureDemandeType extends AbstractType
                 'allow_delete' => true,
                 'prototype' => true,
             ])
-//            ->add('type', ChoiceType::class, [
-//                'choices' =>
-//                    ['input',
-//                        'textarea',
-//                        'checkbox',
-//                        'select',
-//                        'date'],
-//                'choices_as_label' => true
-//            ])
         ;
     }
 

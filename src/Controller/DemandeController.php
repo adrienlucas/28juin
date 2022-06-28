@@ -16,6 +16,7 @@ use Symfony\Component\Form\Event\SubmitEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 class DemandeController extends AbstractController
@@ -23,7 +24,7 @@ class DemandeController extends AbstractController
     /**
      * @Route("/demande/{id}", name="app_demande", defaults={"id": null})
      */
-    public function new(?StructureDemande $structureDemande = null): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ?StructureDemande $structureDemande = null): Response
     {
         $structureForm = $this->createForm(TypeDemandeType::class, ['type' => $structureDemande]);
 
@@ -31,20 +32,39 @@ class DemandeController extends AbstractController
             $demande = new Demande();
             $demande->setType($structureDemande);
 
-            $demandeForm = $this->createForm(DynamiqueDemandeType::class, $demande, [
+            $demandeForm = $this->createForm(DynamiqueDemandeType::class, [], [
                 'structure_demande' => $structureDemande
             ]);
 
+            $demandeForm->handleRequest($request);
+
             if($demandeForm->isSubmitted() && $demandeForm->isValid()) {
-                dump($demande);
-                //$entityManager->persist($demande);
-                //$entityManager->flush();
+                $demande->setDetails($demandeForm->getData());
+                $entityManager->persist($demande);
+                $entityManager->flush();
             }
         }
 
         return $this->render('demande/index.html.twig', [
             'structureForm' => $structureForm->createView(),
             'demandeForm' => isset($demandeForm) ? $demandeForm->createView() : null,
+        ]);
+    }
+
+    /**
+     * @Route("/visualisation-demande/{id}", name="app_visu")
+     */
+    public function show(Demande $demande)
+    {
+        $demandeDetails = $demande->getDetails();
+
+        $demandeForm = $this->createForm(DynamiqueDemandeType::class, $demandeDetails, [
+            'structure_demande' => $demande->getType()
+        ]);
+
+        return $this->render('demande/show.html.twig', [
+            'demande' => $demande,
+            'demandeForm' => $demandeForm->createView(),
         ]);
     }
 
@@ -59,8 +79,6 @@ class DemandeController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()) {
-            /** @var Demande $demande */
-            $demande = $form->getData();
             $entityManager->persist($demande);
             $entityManager->flush();
         }

@@ -45,7 +45,7 @@ class Demande
         return $this;
     }
 
-    public function getDetails(): ?string
+    public function getDetails(): ?array
     {
         return $this->details;
     }
