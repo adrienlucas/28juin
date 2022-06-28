@@ -16,17 +16,25 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 class DynamiqueDemandeType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('type', EntityType::class, [
-            'class' => StructureDemande::class,
-            'choice_label' => 'type',
-            'placeholder' => 'Choisir le type de demande'
-        ]);
-        $builder->add('details', HiddenType::class);
+//        $builder->add('details', HiddenType::class);
+
+        /** @var StructureDemande $structureDemande */
+        $structureDemande = $options['structure_demande'];
+
+        $slugger = new AsciiSlugger();
+        foreach($structureDemande->getChamps() as $champ) {
+            $builder->add(
+                $slugger->slug($champ->getNom())->toString(),
+                $champ->getSymfonyFormType(),
+                ['label' => $champ->getNom(), 'mapped' => false]
+            );
+        }
 
         //
 //        $dynamiqueFormModifier = function(FormEvent $event) {
@@ -54,53 +62,53 @@ class DynamiqueDemandeType extends AbstractType
 //                );
 //            }
 //        };
-
-
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function(FormEvent $event) {
-            dump($event->getData());
-            dump($event->getForm()->get('type')->getData());
-            dump($event->getForm()->get('type')->getNormData());
-            dump($event->getForm()->get('type')->getViewData());
-        });
-        $builder->addEventListener(FormEvents::POST_SET_DATA, function(FormEvent $event) {
-            dump($event->getData());
-            dump($event->getForm()->get('type')->getData());
-            dump($event->getForm()->get('type')->getNormData());
-            dump($event->getForm()->get('type')->getViewData());
-        });
-        $builder->addEventListener(FormEvents::PRE_SUBMIT, function(FormEvent $event) {
-            dump($event->getData());
-            dump($event->getForm()->get('type')->getData());
-            dump($event->getForm()->get('type')->getNormData());
-            dump($event->getForm()->get('type')->getViewData());
-        });
-
-        $builder->addEventListener(FormEvents::SUBMIT, function(FormEvent $event) {
-            $form = $event->getForm();
-            /** @var Demande $demande */
-            $demande = $event->getData();
-            $structureDemande = $demande->getType();
-            dump($demande);
-            $details = json_decode($demande->getDetails(), true);
-            foreach($structureDemande->getChamps() as $champ) {
-                $fieldName = $champ->getNom();
-                $formType = $champ->getSymfonyFormType();
-                $event->getForm()->add(
-                    $fieldName,
-                    $formType,
-                    ['mapped' => false, 'attr' => [
-                        'class' => 'demande-detail-input',
-                        'data-detail-name' => $fieldName
-                    ]]
-                );
-                $form->get($fieldName)
-                    ->setData($details[$fieldName] ?? '');
-            }
-        });
-
-        $builder->addEventListener(FormEvents::POST_SUBMIT, function(FormEvent $event) {
-            dump($event->getData());
-        });
+//
+//
+//        $builder->addEventListener(FormEvents::PRE_SET_DATA, function(FormEvent $event) {
+//            dump($event->getData());
+//            dump($event->getForm()->get('type')->getData());
+//            dump($event->getForm()->get('type')->getNormData());
+//            dump($event->getForm()->get('type')->getViewData());
+//        });
+//        $builder->addEventListener(FormEvents::POST_SET_DATA, function(FormEvent $event) {
+//            dump($event->getData());
+//            dump($event->getForm()->get('type')->getData());
+//            dump($event->getForm()->get('type')->getNormData());
+//            dump($event->getForm()->get('type')->getViewData());
+//        });
+//        $builder->addEventListener(FormEvents::PRE_SUBMIT, function(FormEvent $event) {
+//            dump($event->getData());
+//            dump($event->getForm()->get('type')->getData());
+//            dump($event->getForm()->get('type')->getNormData());
+//            dump($event->getForm()->get('type')->getViewData());
+//        });
+//
+//        $builder->addEventListener(FormEvents::SUBMIT, function(FormEvent $event) {
+//            $form = $event->getForm();
+//            /** @var Demande $demande */
+//            $demande = $event->getData();
+//            $structureDemande = $demande->getType();
+//            dump($demande);
+//            $details = json_decode($demande->getDetails(), true);
+//            foreach($structureDemande->getChamps() as $champ) {
+//                $fieldName = $champ->getNom();
+//                $formType = $champ->getSymfonyFormType();
+//                $event->getForm()->add(
+//                    $fieldName,
+//                    $formType,
+//                    ['mapped' => false, 'attr' => [
+//                        'class' => 'demande-detail-input',
+//                        'data-detail-name' => $fieldName
+//                    ]]
+//                );
+//                $form->get($fieldName)
+//                    ->setData($details[$fieldName] ?? '');
+//            }
+//        });
+//
+//        $builder->addEventListener(FormEvents::POST_SUBMIT, function(FormEvent $event) {
+//            dump($event->getData());
+//        });
 
 //        $builder->addEventListener(FormEvents::SUBMIT, function(FormEvent $event)use ($dynamiqueFormModifier) {
 //            $dynamiqueFormModifier($event->getForm(), $event->getData());
@@ -170,5 +178,9 @@ class DynamiqueDemandeType extends AbstractType
     {
         $resolver->setDefault('allow_extra_fields', true);
         $resolver->setDefault('data_class', Demande::class);
+
+        $resolver->define('structure_demande');
+        $resolver->setRequired('structure_demande');
+        $resolver->addAllowedTypes('structure_demande', StructureDemande::class);
     }
 }

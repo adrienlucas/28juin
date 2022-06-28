@@ -3,27 +3,34 @@
 {% block title %}Hello DemandeController!{% endblock %}
 
 {% block body %}
-    {{ form_start(form) }}
-        {{ form_row(form.type) }}
 
-        {{ form_rest(form) }}
-        <button type="submit">Enregistrer</button>
-    {{ form_end(form) }}
+    {{ form_start(structureForm) }}
+        {{ form_row(structureForm.type) }}
+    {{ form_end(structureForm) }}
+
+    {% if demandeForm != null %}
+        {{ form_start(demandeForm) }}
+            {{ form_rest(demandeForm) }}
+            <button type="submit">Enregistrer</button>
+        {{ form_end(demandeForm) }}
+    {% endif %}
 
     <script>
         (() => {
-            $('#{{ form.type.vars.id }}').change(function(){
-                $('form[name="{{ form.vars.name }}"]').submit();
+            $('#{{ structureForm.type.vars.id }}').change(function(){
+                var structureId = $(this).val();
+                console.log(structureId);
+                window.location.assign(('{{ path('app_demande', {'id': 9999999}) }}').replace(9999999, structureId))
             });
 
-            $('form[name="{{ form.vars.name }}"]').submit(function(){
-                var details = {};
-                $('.demande-detail-input').each(function(i, el) {
-                    details[$(el).attr('data-detail-name')] = $(el).val();
-                });
+            {#$('form[name="{{ form.vars.name }}"]').submit(function(){#}
+            {#    var details = {};#}
+            {#    $('.demande-detail-input').each(function(i, el) {#}
+            {#        details[$(el).attr('data-detail-name')] = $(el).val();#}
+            {#    });#}
 
-                $('#{{ form.details.vars.id }}').val(JSON.stringify(details));
-            });
+            {#    $('#{{ form.details.vars.id }}').val(JSON.stringify(details));#}
+            {#});#}
         })();
     </script>
 {% endblock %}

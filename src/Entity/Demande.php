@@ -24,7 +24,7 @@ class Demande
     private $type;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="json")
      */
     private $details;
 

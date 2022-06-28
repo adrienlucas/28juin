@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Demande;
 use App\Entity\StructureDemande;
 use App\Form\DynamiqueDemandeType;
+use App\Form\TypeDemandeType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,15 +23,36 @@ class DemandeController extends AbstractController
     /**
      * @Route("/demande/{id}", name="app_demande", defaults={"id": null})
      */
-    public function index(?StructureDemande $structureDemande = null, Request $request, EntityManagerInterface $entityManager): Response
+    public function new(?StructureDemande $structureDemande = null): Response
+    {
+        $structureForm = $this->createForm(TypeDemandeType::class, ['type' => $structureDemande]);
+
+        if($structureDemande !== null) {
+            $demande = new Demande();
+            $demande->setType($structureDemande);
+
+            $demandeForm = $this->createForm(DynamiqueDemandeType::class, $demande, [
+                'structure_demande' => $structureDemande
+            ]);
+
+            if($demandeForm->isSubmitted() && $demandeForm->isValid()) {
+                dump($demande);
+                //$entityManager->persist($demande);
+                //$entityManager->flush();
+            }
+        }
+
+        return $this->render('demande/index.html.twig', [
+            'structureForm' => $structureForm->createView(),
+            'demandeForm' => isset($demandeForm) ? $demandeForm->createView() : null,
+        ]);
+    }
+
+
+    public function __index(?StructureDemande $structureDemande = null, Request $request, EntityManagerInterface $entityManager): Response
     {
         $demande = new Demande();
 
-        $builder->add('type', EntityType::class, [
-            'class' => StructureDemande::class,
-            'choice_label' => 'type',
-            'placeholder' => 'Choisir le type de demande'
-        ]);
 
 
         $form = $this->createForm(DynamiqueDemandeType::class, $demande);
