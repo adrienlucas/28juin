@@ -19,13 +19,7 @@ class DynamiqueDemandeType extends AbstractType
 
         $slugger = new AsciiSlugger();
         foreach($structureDemande->getChamps() as $champ) {
-            $builder->add(
-                $slugger->slug($champ->getNom())->toString(),
-                $champ->getSymfonyFormType(),
-                [
-                    'label' => $champ->getNom(),
-                ]
-            );
+            $champ->addFieldToFormBuilder($builder);
         }
     }
 

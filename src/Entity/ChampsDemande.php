@@ -9,6 +9,8 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * @ORM\Entity()
@@ -29,24 +31,6 @@ class ChampsDemande
         self::TYPE_DATE,
     ];
 
-    public function getSymfonyFormType(): string
-    {
-        switch($this->type) {
-            case self::TYPE_INPUT:
-                return TextType::class;
-            case self::TYPE_TEXTAREA:
-                return TextareaType::class;
-            case self::TYPE_CHECKBOX:
-                return CheckboxType::class;
-            case self::TYPE_SELECT:
-                return ChoiceType::class;
-            case self::TYPE_DATE:
-                return DateType::class;
-            default:
-                throw new \LogicException(sprintf('The "%s" type is not supported', $this->type));
-        }
-    }
-
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -65,9 +49,30 @@ class ChampsDemande
     private $type;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
-    private $options = [];
+    private $options;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $default;
+
+    /**
+     * @return mixed
+     */
+    public function getDefault()
+    {
+        return $this->default;
+    }
+
+    /**
+     * @param mixed $default
+     */
+    public function setDefault($default): void
+    {
+        $this->default = $default;
+    }
 
     /**
      * @ORM\ManyToOne(targetEntity=StructureDemande::class, inversedBy="champs")
@@ -104,12 +109,12 @@ class ChampsDemande
         return $this;
     }
 
-    public function getOptions(): ?array
+    public function getOptions(): ?string
     {
         return $this->options;
     }
 
-    public function setOptions(?array $options): self
+    public function setOptions(?string $options): self
     {
         $this->options = $options;
 
@@ -126,5 +131,59 @@ class ChampsDemande
         $this->structure = $structure;
 
         return $this;
+    }
+
+    public function addFieldToFormBuilder(FormBuilderInterface $builder): void
+    {
+        switch($this->type) {
+            case self::TYPE_INPUT:
+                $formType = TextType::class;
+                $formOptions = [];
+                break;
+            case self::TYPE_TEXTAREA:
+                $formType = TextareaType::class;
+                $formOptions = [];
+                break;
+            case self::TYPE_CHECKBOX:
+                $formType = CheckboxType::class;
+                $formOptions = [];
+                break;
+            case self::TYPE_SELECT:
+                $formType = ChoiceType::class;
+                $choices = explode(',', $this->options);
+                $formOptions = ['choices' => array_combine($choices, $choices)];
+                break;
+            case self::TYPE_DATE:
+                $formType = DateType::class;
+                $formOptions = ['widget' => 'single_text'];
+                break;
+            default:
+                throw new \LogicException(sprintf('The "%s" type is not supported', $this->type));
+        }
+
+        $slugger = new AsciiSlugger();
+        $builder->add(
+            $slugger->slug($this->getNom())->toString(),
+            $formType,
+            array_merge(['label' => $this->getNom()], $formOptions)
+        );
+    }
+
+    public static function getSymfonyFormType($type): string
+    {
+        switch($type) {
+            case self::TYPE_INPUT:
+                return TextType::class;
+            case self::TYPE_TEXTAREA:
+                return TextareaType::class;
+            case self::TYPE_CHECKBOX:
+                return CheckboxType::class;
+            case self::TYPE_SELECT:
+                return ChoiceType::class;
+            case self::TYPE_DATE:
+                return DateType::class;
+            default:
+                throw new \LogicException(sprintf('The "%s" type is not supported', $type));
+        }
     }
 }

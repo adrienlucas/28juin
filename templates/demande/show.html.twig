@@ -5,8 +5,13 @@
 {% block body %}
     <h3>Type de demande : {{ demande.type.type }}</h3>
     <ul>
-        {% for field,value in demande.details %}
-            <li><strong>{{ field }}</strong> : {{ value }}</li>
+        {% for demandeDetail in demande.demandeDetails %}
+            {% if demandeDetail.isDate %}
+                {% set valeur = demandeDetail.valeur|date('d-m-Y') %}
+            {% else %}
+                {% set valeur = demandeDetail.valeur %}
+            {% endif %}
+            <li><strong>{{ demandeDetail.nom }}</strong> : {{ valeur }}</li>
         {% endfor %}
     </ul>
 

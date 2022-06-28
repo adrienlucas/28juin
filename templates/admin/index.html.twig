@@ -33,6 +33,11 @@
 
                 $('#champs-holder').append(newChamps);
             });
+
+            $('select[id$=_type]').change(function(){
+
+                $('#{{ form.vars.id }}').submit();
+            });
         })();
 
     </script>

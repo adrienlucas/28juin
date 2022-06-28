@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Demande;
+use App\Entity\DemandeDetail;
 use App\Entity\StructureDemande;
 use App\Form\DynamiqueDemandeType;
 use App\Form\TypeDemandeType;
@@ -39,7 +40,15 @@ class DemandeController extends AbstractController
             $demandeForm->handleRequest($request);
 
             if($demandeForm->isSubmitted() && $demandeForm->isValid()) {
-                $demande->setDetails($demandeForm->getData());
+//                $demande->setDetails($demandeForm->getData());
+                foreach($demandeForm->getData() as $fieldKey => $fieldData) {
+                    $demandeDetail = new DemandeDetail();
+                    $demandeDetail->setNom($fieldKey);
+                    $demandeDetail->setValeur($fieldData);
+
+                    $demande->addDemandeDetail($demandeDetail);
+                }
+
                 $entityManager->persist($demande);
                 $entityManager->flush();
             }
@@ -56,11 +65,16 @@ class DemandeController extends AbstractController
      */
     public function show(Demande $demande)
     {
-        $demandeDetails = $demande->getDetails();
+//        $demandeDetails = $demande->getDetails();
+        $formData = [];
+        foreach($demande->getDemandeDetails() as $demandeDetail) {
+            $formData[$demandeDetail->getNom()] = $demandeDetail->getValeur();
+        }
 
-        $demandeForm = $this->createForm(DynamiqueDemandeType::class, $demandeDetails, [
+        $demandeForm = $this->createForm(DynamiqueDemandeType::class, $formData, [
             'structure_demande' => $demande->getType()
         ]);
+
 
         return $this->render('demande/show.html.twig', [
             'demande' => $demande,
@@ -72,8 +86,6 @@ class DemandeController extends AbstractController
     public function __index(?StructureDemande $structureDemande = null, Request $request, EntityManagerInterface $entityManager): Response
     {
         $demande = new Demande();
-
-
 
         $form = $this->createForm(DynamiqueDemandeType::class, $demande);
         $form->handleRequest($request);
